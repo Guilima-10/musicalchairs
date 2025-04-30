@@ -6,7 +6,7 @@
 #include <chrono>
 #include <random>
 #include <algorithm>
-#include <semaphore.h> // POSIX semáforo
+#include <semaphore.h>
 
 using namespace std;
 
@@ -19,7 +19,7 @@ public:
     condition_variable music_cv;
     mutex mtx;
     bool musica_parou = false;
-    bool primeira_rodada = true;  // Variável para rastrear se é a primeira rodada
+    bool primeira_rodada = true;  // variavel criada para rastrear se é a primeira rodada
 
     JogoDasCadeiras(int n) : cadeiras(n - 1) {
         for (int i = 1; i <= n; ++i) {
@@ -40,19 +40,16 @@ public:
         sem_destroy(&semaphore);
         sem_init(&semaphore, 0, cadeiras);
 
-        // Modificação na exibição da rodada
+        // se é a primeira rodada imprime iniciando, se nao, imprime "proxima"
         if (primeira_rodada) {
-            cout << "\nIniciando rodada com " << players.size()
-                 << " jogadores e " << cadeiras << " cadeiras.\n";
-            primeira_rodada = false;  // Garantir que "Iniciando rodada" só apareça na primeira rodada
+            cout << "\nIniciando rodada com " << players.size() << " jogadores e " << cadeiras << " cadeiras.\n";
+            primeira_rodada = false;  
         } else {
             if (cadeiras != 1){
-            cout << "\nProxima rodada com " << players.size()
-                 << " jogadores e " << cadeiras << " cadeiras.\n";}
+            cout << "\nProxima rodada com " << players.size() << " jogadores e " << cadeiras << " cadeiras.\n";}
             
                  else {
-                    cout << "\nProxima rodada com " << players.size()
-                    << " jogadores e " << cadeiras << " cadeira.\n";
+                    cout << "\nProxima rodada com " << players.size() << " jogadores e " << cadeiras << " cadeira.\n";
                  }
         }
 
@@ -123,14 +120,10 @@ public:
     Coordenador(JogoDasCadeiras* _jogo) : jogo(_jogo) {}
 
     void liberar_threads_eliminadas() {
-        // Libera semáforo para threads que ficaram travadas
+        // libera semaforo p threads que ficaram travadas
         int restantes = jogo->players.size();
         int sentados = 0;
-        // Contar quantos conseguiram cadeira
-        for (auto& id : jogo->players) {
-            // mas jogador->conseguiu_cadeira não acessível aqui
-        }
-        // Simplesmente garantir que todos saiam da espera
+        
         sem_post(&jogo->semaphore);
     }
 
@@ -140,23 +133,23 @@ public:
         cout << "-----------------------------------------------\n";
 
         while (jogo->players.size() > 1) {
-            // Inicia rodada
+            
             jogo->iniciar_rodada();
 
-            // Embaralha a ordem dos jogadores antes de tentar ocupar as cadeiras
+            // embaralha a ordem dos jogadores antes de tentar ocupar as cadeiras
             random_device rd;
             mt19937 g(rd());
-            shuffle(jogadores.begin(), jogadores.end(), g);  // Embaralha a ordem dos jogadores
+            shuffle(jogadores.begin(), jogadores.end(), g);  
 
-            // Música tocando aleatório
+            // musica tocando aleatorio
             uniform_int_distribution<> dis(1, 3);
             this_thread::sleep_for(chrono::seconds(dis(g)));
 
-            // Para música
+            // para a musica
             cout << "\n> A musica parou! Os jogadores estao tentando se sentar...\n";
             jogo->parar_musica();
 
-            // Threads de jogadores tentam ocupar
+            // threads de jogadores tentam ocupar
             vector<thread> threads;
             for (auto& jogador : jogadores) {
                 if (jogador->ativo) {
@@ -166,14 +159,14 @@ public:
             }
             for (auto& t : threads) t.join();
 
-            // Verificar eliminações e liberar semáforo extra
+            // verifica eliminacao
             for (auto& jogador : jogadores) {
                 if (jogador->ativo) {
                     jogador->verificar_eliminacao();
                 }
             }
 
-            // Montar lista de ocupantes
+            // monta a list de ocupação por cadeira disponivel
             vector<string> ocupadas;
             for (auto& jogador : jogadores) {
                 if (jogador->ativo && jogador->conseguiu_cadeira) {
@@ -181,11 +174,9 @@ public:
                 }
             }
 
-            // Exibir estado e eliminações
             jogo->exibir_estado(ocupadas);
         }
 
-        // Vencedor
         cout << "\nVencedor " << jogo->players.front() << "! Parabens!\n";
         cout << "-----------------------------------------------\n";
         cout << "\nObrigado por jogar o Jogo das Cadeiras Concorrente!\n\n";
@@ -206,7 +197,6 @@ int main() {
     Coordenador coord(&jogo);
     coord.iniciar_jogo(jogadores);
 
-    // Cleanup
     for (auto j : jogadores) delete j;
 
     return 0;
